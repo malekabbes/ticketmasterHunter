@@ -1,65 +1,44 @@
 const axios = require('axios');
-const nodemailer = require('nodemailer');
+const cheerio = require('cheerio');
+require('dotenv').config();
 
-// ticket master API
-const apiUrl = 'https://www.ticketmaster.fr/api/grille-tarifaire/manifestation/idmanif/605433/seance/idseance/3933860/78768?codLang=FR&codCoMod=WEB';
+const url = 'https://www.ticketmaster.fr/fr/manifestation/linkin-park-billet/idmanif/605433';
 
-// smtp
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: 'spxspxtn@gmail.com',
-        pass: 'dyqd ciqm wcdr wkzj' // PAS de \n ici
-    }
-});
-let index=0;
-async function checkForAvailablePlaces() {
+async function checkTicketAvailability() {
     try {
-        const response = await axios.get(apiUrl, {
+        console.log("COOKIES",process.env.COOKIE)
+
+        const response = await axios.get(url, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36',
-                'Accept': 'application/json, text/plain, */*',
-                'Referer': 'https://www.ticketmaster.fr/fr/manifestation/linkin-park-billet/idmanif/605433',
-                'Authorization': `Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJLNVR5clFtazRhM2NvbWVwajVrbmljTXhrUW1ILU9qSjduRDV1M0syb2pvIn0.eyJleHAiOjE3NDgwODY5MzcsImlhdCI6MTc0ODA3OTczNywianRpIjoiYTIxODRkMmEtMGE3Yy00ODNkLTk1NTEtYzUxMGEwYjIwZTE3IiwiaXNzIjoiaHR0cDovL3JlZGhhdC1zc28ta2V5Y2xvYWstaHR0cC5yZWRoYXQtc3NvL2F1dGgvcmVhbG1zL1RpY2tldG1hc3RlciIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiIxNjQwZGQ0Ny0zZDljLTQwYWUtYWE4NS03YzNmNTg0NTdkMWQiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJndWkiLCJzZXNzaW9uX3N0YXRlIjoiZjhiYjM5NzQtNjBhYi00NGQ2LWJlNzItOGNhYjQzMjc3ZTA1IiwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iLCJkZWZhdWx0LXJvbGVzLXRpY2tldG1hc3RlciJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoicHJvZmlsZSBlbWFpbCIsInNpZCI6ImY4YmIzOTc0LTYwYWItNDRkNi1iZTcyLThjYWI0MzI3N2UwNSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJpZHByb2ZpbCI6IjIyOTY3NzEzIiwibmFtZSI6Ik1hbGVrIEFCQkVTIiwicHJlZmVycmVkX3VzZXJuYW1lIjoiYWQ2NmY0NGEtN2U5Ny00MjViLTkxNmItZDM3NjhiZGRlY2YwIiwiZ2l2ZW5fbmFtZSI6Ik1hbGVrIiwiZmFtaWx5X25hbWUiOiJBQkJFUyIsImVtYWlsIjoibWFsZWthYmJlczY2NUBnbWFpbC5jb20ifQ.EqDKRRayyBilgUQKnWAgXu5W44Dm6i0Sko9plQKTr40ZPKme8p1rW3j74S_h7o0xx-koYOYKMZ81VAmHdlKxmpDv518oDYU9DkU1bI04WXNrY9IrsWuQI-906ofzGVgo65edF9Spf5VWNxt0MO_SKRyH7siARDUoaXqBBOy2dEh0sVMybdgAnJE3f7_pHhYYkKqu28o0XNvw-JbfOZKooEUeBkeUXuD58waUBkNkVFhCc6kCbewR-aj3AoQhbmUS195rLL23qocWQQLpke3AvgYJr4muarAbYn5NUpDDwkdgNIH-9fPi_bUmrC1hT6NvUVokpE3EFjWe56EJ0-oorw`,
-                'Cookie':'eps_sid=913667db245e379d49a277ee4932a29819166fd0; tmpt=0:6856cd1afe000000:1748079102:1870bc7b:8d7b5fad36996f5874036614a49210ef:f647a00aaf642e21a7f10aa1cd4d7961d972ac439f62fd7b5fcf0c1f2dcc3eb5; SID=9Mx3oO7FTEa5TMzqBOc91XeynNfrTNGAPhsCC4lDl1ZnHW-r_sM7wIb_g8BbMhGcfe8a-Gxn_SV_noka; OptanonAlertBoxClosed=2025-05-24T09:31:46.375Z; eupubconsent-v2=CQR6V7AQR6V7AAcABBFRBsFsAP_gAAAAACiQJ8JDzC7FbUFCwD5zaLsAMAgHRMAIQoQAAASBAGABQAKQIAQCkkAYFASABAACAAAAICRBIQIECAAAAUAAQAAAIAAEAAAAAAAKAAAAgAAAAAAIAAACAIAAEAAIgAAAkAAAmAgAAAIAGEAAgAAAIAAAAAAAAAAAAAAAAAAAAAIAAAAAACAAAQAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAACAADwAAAEBICgACwAKgAcABBADIANAAeABMACqAIQARAAwwB7AD9AI4AYoA4gCkQFNgLzAZOOgNAALAAqABwAEEAMgA0AB4AEwAKoAYgBEACjAGGAMoAewA_QCLAEcAMUAcQA6gCLwFNgLzAZOAywBqo4AMAA8AC4AXQCEAHSAX0QgEgALACqAGIAjgBigDqAKbAZOA1UlAPAAWABwAHgATAAqgBiAEQAKMAjgBigDqAIvAXmAycBlhIACABcpAUAAWABUADgAIIAZABoADwAJgAVQAxACIAFGAMoAfoBFgCOAGKAReApsBeYDJygAIAC4C-gA.f_wAAAAAAAAA; _gcl_au=1.1.1631024657.1748079106; _#atc=isSme%3A; ty_id=336f143e-b1ec-401f-a25a-dc73b80f3a63; _ga=GA1.1.809677728.1748079107; ABTastySession=mrasn=&lp=about%253Asrcdoc; _cs_c=1; permutive-id=9af0e4c4-5a1c-4cd9-a4c7-8302f8ee8068; _cs_cvars=%7B%221%22%3A%5B%22Page%20Name%22%2C%22billet%22%5D%2C%222%22%3A%5B%22Page%20Type%22%2C%22manifestation%22%5D%2C%223%22%3A%5B%22Id%20Tier%22%2C%2278768%22%5D%2C%225%22%3A%5B%22Product%20Class%22%2C%22billet%22%5D%2C%226%22%3A%5B%22Artist%20ID%22%2C%221291%22%5D%2C%227%22%3A%5B%22Event%20ID%22%2C%22605433%22%5D%2C%228%22%3A%5B%22Primary%20Page%20Category%22%2C%22CONCERT%22%5D%2C%229%22%3A%5B%22Page%20Sub%20Category%22%2C%22HARD%20METAL%22%5D%2C%2210%22%3A%5B%22Selection%20Option%22%2C%22AUTO%20and%20ISM%22%5D%2C%2211%22%3A%5B%22Artist%20Name%22%2C%22LINKIN%20PARK%22%5D%2C%2212%22%3A%5B%22Ticket%20Primary%20Category%22%2C%22CO%22%5D%2C%2213%22%3A%5B%22Event%20Resale%20Eligible%22%2C%221%22%5D%2C%2214%22%3A%5B%22User%20Login%20Status%22%2C%2222967713%22%5D%7D; ty_ead=eyJkYXRlTGFzdFZpc2l0IjoxNzQ4MDc5Nzc2MzcwLCJsYXN0VHAiOnsicmVmZXJyZXIiOiJodHRwczovL3d3dy50aWNrZXRtYXN0ZXIuZnIvZnIvcmVzdWx0YXQ/aXBTZWFyY2g9bGlua2luK3BhcmsiLCJ0YXJnZXQiOiJodHRwczovL3d3dy50aWNrZXRtYXN0ZXIuZnIvZnIvcmVzdWx0YXQ/aXBTZWFyY2g9bGlua2luK3BhcmsifSwiY3VycmVudENhbXBhaWduIjp7ImRhdGUiOjE3NDgwNzkxMDM2OTEsInJlZmVycmVyIjoiaHR0cHM6Ly93d3cudGlja2V0bWFzdGVyLmZyL2ZyL3Jlc3VsdGF0P2lwU2VhcmNoPWxpbmtpbitwYXJrIiwidGFyZ2V0IjoiaHR0cHM6Ly93d3cudGlja2V0bWFzdGVyLmZyL2ZyL3Jlc3VsdGF0P2lwU2VhcmNoPWxpbmtpbitwYXJrIn19; OptanonConsent=isGpcEnabled=0&datestamp=Sat+May+24+2025+11%3A42%3A56+GMT%2B0200+(heure+d%E2%80%99%C3%A9t%C3%A9+d%E2%80%99Europe+centrale)&version=202408.1.0&browserGpcFlag=0&isIABGlobal=false&hosts=&consentId=4770f5d9-f984-4884-a9bd-c1621508df98&interactionCount=1&isAnonUser=1&landingPath=NotLandingPage&groups=C0001%3A1%2CC0002%3A1%2CC0003%3A1%2CC0004%3A1%2CC0005%3A1%2CV2STACK42%3A1&intType=1&geolocation=FR%3BIDF&AwaitingReconsent=false; pageviewCount=14; _ga_J84G0MF2VF=GS2.1.s1748079106$o1$g1$t1748079777$j36$l0$h0$dEtXR_k0LA93m_yWFyGG-wYEmIRus8XQcWQ; _ga_PD93K99YFM=GS2.1.s1748079106$o1$g1$t1748079777$j34$l0$h354748924$dbAso5pV1AWefrDHfgMzuJF1KVh9Ptwoh-Q; ABTasty=uid=bxgkd0r788yvjyy4&fst=1748079106841&pst=-1&cst=1748079106841&ns=1&pvt=9&pvis=9&th=; _cs_id=576e1bb5-7f09-a0cb-8fca-d2a2b56f1000.1728642301.8.1748079777.1748079106.1685358929.1762806301824.1.x; _uetsid=e96e5f40388111f0afa14bce60fb6de6; _uetvid=11f7fee087bb11ef9faf19ec3fe2875f; _cs_s=14.0.0.9.1748081577798'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/122.0.0.0 Safari/537.36',
+                'Referer': 'https://www.ticketmaster.fr/',
+                'Accept-Language': 'fr-FR,fr;q=0.9',
+                'Cookie':process.env.COOKIE
             }
         });
-        console.log("Données récupérées :", response.data);
-        index+=1;
-        // Corriger selon la structure exacte de response.data
-        const categories = response.data.infoCategories || [];
+        console.log("COOKIES",process.env.COOKIE)
+        const html = response.data;
+        const $ = cheerio.load(html);
 
-        const availableCategories = categories.filter(category => category.nbPlaces > 0);
+        let available = false;
 
-        if (availableCategories.length > 0) {
-            const availableInfo = availableCategories.map(cat =>
-                `${cat.llgCatPl} - ${cat.nbPlaces} places available at €${cat.priceMin}`
-            ).join('\n');
+        // Tu peux ajuster ce sélecteur selon le site HTML exact
+        $('.tarif_libelle').each((i, el) => {
+            const status = $(el).text().trim().toLowerCase();
+            if (!status.includes('épuisé')) {
+                available = true;
+                console.log('✅ Ticket disponible détecté !');
+                console.log('>>', $(el).text().trim());
+            }
+        });
 
-            const mailOptions = {
-                from: 'spxspxtn@gmail.com',
-                to: 'malekabbes665@gmail.com',
-                subject: 'Tickets Available!',
-                text: `Good news! There are places available:\n\n${availableInfo}`
-            };
-
-            transporter.sendMail(mailOptions, (error, info) => {
-                if (error) {
-                    console.error('Erreur envoi email:', error);
-                } else {
-                    console.log('Email envoyé:', info.response);
-                }
-            });
-        } else {
-            console.log(`Aucune place disponible - check#${index}`);
+        if (!available) {
+            console.log('❌ Tous les tickets sont épuisés.');
         }
-    } catch (error) {
-        console.error('Erreur récupération données:', error.message);
+
+    } catch (err) {
+        console.error('Erreur lors du chargement de la page:', err.message);
     }
 }
 
-// Appel immédiat
-checkForAvailablePlaces();
-
-// Toutes les 100 secondes
-setInterval(checkForAvailablePlaces, 10000);
+checkTicketAvailability();
