@@ -1,23 +1,22 @@
 const { chromium } = require('playwright');
 const nodemailer = require('nodemailer');
 
-const URL = 'https://www.ticketmaster.fr/fr/manifestation/linkin-park-billet/idmanif/605433';
-
-(async () => {
+async function checkTicketAvailability() {
     const browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
 
-    await page.goto(URL, { waitUntil: 'domcontentloaded' });
+    await page.goto('https://www.ticketmaster.fr/fr/manifestation/linkin-park-billet/idmanif/605433', {
+        waitUntil: 'domcontentloaded',
+    });
 
     const categories = await page.$$eval('.tarif_libelle', nodes =>
         nodes.map(node => node.textContent.trim())
     );
 
-    const available = categories.filter(text => !text.toLowerCase().includes('épuisé'));
+    const available = categories.filter(c => !c.toLowerCase().includes('épuisé'));
 
     if (available.length > 0) {
-        console.log('✅ Tickets available:');
-        console.log(available);
+        console.log('🎉 Tickets found:', available);
 
         const transporter = nodemailer.createTransport({
             service: 'gmail',
@@ -30,13 +29,16 @@ const URL = 'https://www.ticketmaster.fr/fr/manifestation/linkin-park-billet/idm
         await transporter.sendMail({
             from: process.env.MAIL_USER,
             to: 'malekabbes665@gmail.com',
-            subject: '🎫 Tickets Found for Linkin Park!',
-            text: `Here are the available categories:\n\n${available.join('\n')}`
+            subject: '🎫 Tickets Found!',
+            text: `Available categories:\n${available.join('\n')}`
         });
-
     } else {
-        console.log('❌ All categories are sold out.');
+        console.log('❌ No tickets available.');
     }
 
     await browser.close();
-})();
+}
+
+// Loop every 10 seconds
+setInterval(checkTicketAvailability, 10000);
+checkTicketAvailability(); // Run once immediately
