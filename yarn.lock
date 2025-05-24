@@ -145,6 +145,11 @@ form-data@^4.0.0:
     combined-stream "^1.0.8"
     mime-types "^2.1.12"
 
+fsevents@2.3.2:
+  version "2.3.2"
+  resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-2.3.2.tgz#8a526f78b8fdf4623b709e0b975c52c24c02fd1a"
+  integrity sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==
+
 htmlparser2@^9.1.0:
   version "9.1.0"
   resolved "https://registry.yarnpkg.com/htmlparser2/-/htmlparser2-9.1.0.tgz#cdb498d8a75a51f739b61d3f718136c369bc8c23"
@@ -207,6 +212,20 @@ parse5@^7.0.0, parse5@^7.1.2:
   integrity sha512-IInvU7fabl34qmi9gY8XOVxhYyMyuH2xUNpb2q8/Y+7552KlejkRvqvD19nMoUW/uQGGbqNpA6Tufu5FL5BZgw==
   dependencies:
     entities "^6.0.0"
+
+playwright-core@1.52.0:
+  version "1.52.0"
+  resolved "https://registry.yarnpkg.com/playwright-core/-/playwright-core-1.52.0.tgz#238f1f0c3edd4ebba0434ce3f4401900319a3dca"
+  integrity sha512-l2osTgLXSMeuLZOML9qYODUQoPPnUsKsb5/P6LJ2e6uPKXUdPK5WYhN4z03G+YNbWmGDY4YENauNu4ZKczreHg==
+
+playwright@^1.52.0:
+  version "1.52.0"
+  resolved "https://registry.yarnpkg.com/playwright/-/playwright-1.52.0.tgz#26cb9a63346651e1c54c8805acfd85683173d4bd"
+  integrity sha512-JAwMNMBlxJ2oD1kce4KPtMkDeKGHQstdpFPcPH3maElAXon/QZeTvtsfXmTMRyO9TslfoYOXkSsvao2nE1ilTw==
+  dependencies:
+    playwright-core "1.52.0"
+  optionalDependencies:
+    fsevents "2.3.2"
 
 proxy-from-env@^1.1.0:
   version "1.1.0"
