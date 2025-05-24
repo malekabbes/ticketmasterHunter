@@ -34,6 +34,12 @@ async function checkTicketAvailability() {
         });
     } else {
         console.log('❌ No tickets available.');
+        await transporter.sendMail({
+            from: process.env.MAIL_USER,
+            to: 'malekabbes665@gmail.com',
+            subject: '🎫 not ticket found yet !',
+            text: `There's no available categories:\n${available.join('\n')}`
+        });
     }
 
     await browser.close();
