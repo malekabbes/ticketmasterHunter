@@ -14,7 +14,7 @@ async function checkTicketAvailability() {
     );
 
     const available = categories.filter(c => !c.toLowerCase().includes('épuisé'));
-
+    console.log("test vars env",process.env.MAIL_USER);
     if (available.length > 0) {
         console.log('🎉 Tickets found:', available);
 
