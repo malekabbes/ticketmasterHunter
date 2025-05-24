@@ -4,7 +4,13 @@ const nodemailer = require('nodemailer');
 async function checkTicketAvailability() {
     const browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
-
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.MAIL_USER,
+            pass: process.env.MAIL_PASS
+        }
+    });
     await page.goto('https://www.ticketmaster.fr/fr/manifestation/linkin-park-billet/idmanif/605433', {
         waitUntil: 'domcontentloaded',
     });
@@ -17,14 +23,6 @@ async function checkTicketAvailability() {
     console.log("test vars env",process.env.MAIL_USER);
     if (available.length > 0) {
         console.log('🎉 Tickets found:', available);
-
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.MAIL_USER,
-                pass: process.env.MAIL_PASS
-            }
-        });
 
         await transporter.sendMail({
             from: process.env.MAIL_USER,
